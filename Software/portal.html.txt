@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O-CLIMBOX - Ocean-Climate Observation Framework</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>.hero-section{background-image:linear-gradient(rgba(11,61,145,.4),rgba(0,0,0,.4)),url('hero-bg.jpg');background-size:cover;background-position:center}</style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+
+<nav class="absolute w-full top-0 z-50 px-8 py-4 flex justify-between items-center text-white bg-blue-900/50 backdrop-blur-sm shadow-sm">
+  <div class="flex items-center gap-4">
+    <div class="text-2xl font-bold tracking-wider cursor-pointer" onclick="kembaliKeHome()">O-CLIMBOX</div>
+    <div class="text-xs border-l border-white/50 pl-4 hidden md:block">An Instrumental Framework for<br>Ocean-Climate Observation</div>
+  </div>
+  <div class="flex items-center gap-6">
+    <div id="badge-nav" class="hidden md:flex items-center gap-2 bg-yellow-500/20 border border-yellow-400 text-yellow-200 text-xs px-3 py-1 rounded-full">
+      <span id="dot-nav" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span><span id="teks-nav">Memeriksa alat...</span>
+    </div>
+    <div id="menu-nav" class="hidden md:flex gap-6 text-sm font-medium">
+      <a href="#" onclick="kembaliKeHome()" class="hover:text-blue-300 transition">Home</a>
+      <a href="#" onclick="bukaHalamanPeta()" class="hover:text-blue-300 transition">Data</a>
+      <a href="#" id="nav-kelola" onclick="bukaKelola(event)" class="hidden text-amber-300 hover:text-amber-200 transition">Kelola</a>
+    </div>
+    <button id="btn-login-nav" onclick="bukaModalAuth()" class="border-2 border-white px-5 py-1.5 rounded-full text-sm font-bold hover:bg-white hover:text-blue-900 transition shadow-lg">Login</button>
+  </div>
+</nav>
+
+<div id="auth-modal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-center justify-center backdrop-blur-sm">
+  <div class="bg-white p-8 rounded-2xl w-96 shadow-2xl relative border-t-4 border-blue-600">
+    <button onclick="tutupAuth()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 font-bold text-xl">&#10006;</button>
+    <h2 id="auth-title" class="text-2xl font-bold mb-1">Login Sistem</h2>
+    <p id="auth-subtitle" class="text-xs text-gray-500 mb-4">Masuk untuk mengakses panel kontrol pompa.</p>
+    <div class="space-y-4">
+      <div><label class="text-xs font-bold text-gray-600 uppercase mb-1 block">Username</label><input type="text" id="auth-username" placeholder="Nama Akun Anda" class="w-full border-2 border-gray-200 p-2.5 rounded-lg outline-none focus:border-blue-500"></div>
+      <div id="auth-email-container" class="hidden"><label class="text-xs font-bold text-gray-600 uppercase mb-1 block">Alamat Email</label><input type="email" id="auth-email" placeholder="contoh@email.com" class="w-full border-2 border-gray-200 p-2.5 rounded-lg outline-none focus:border-blue-500"></div>
+      <div><label class="text-xs font-bold text-gray-600 uppercase mb-1 block">Password</label><input type="password" id="auth-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" class="w-full border-2 border-gray-200 p-2.5 rounded-lg outline-none focus:border-blue-500"></div>
+      <button id="auth-btn" onclick="prosesAuth()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md mt-2">Masuk Sekarang</button>
+    </div>
+    <div class="mt-6 border-t pt-4 text-center text-sm text-gray-600"><span id="auth-switch-text">Belum punya akun?</span> <button onclick="toggleAuthMode()" class="text-blue-600 font-bold hover:underline ml-1" id="auth-switch-btn">Daftar disini</button></div>
+  </div>
+</div>
+
+<div id="halaman-utama" class="block">
+  <header class="hero-section min-h-screen flex items-center px-8 md:px-16 pt-20">
+    <div class="w-full max-w-7xl mx-auto"><div class="text-white">
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 border border-white/30 backdrop-blur-md text-xs font-semibold tracking-wide mb-4"><span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span><span>COASTAL &amp; MARINE ECOSYSTEM MONITORING</span></div>
+      <h1 class="text-5xl md:text-7xl font-extrabold leading-tight mb-6 drop-shadow-lg">O-CLIMBOX</h1>
+      <p class="text-lg md:text-xl text-gray-100 mb-8 max-w-lg drop-shadow">An Instrumental Framework for Ocean-Climate Observation in a Changing Climate</p>
+      <button onclick="bukaHalamanPeta()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-full font-bold transition shadow-xl">Akses Data (Real-time) &rarr;</button>
+    </div></div>
+  </header>
+</div>
+
+<div id="halaman-peta" class="hidden pt-28 pb-10 px-6 max-w-7xl mx-auto">
+  <div class="mb-8"><button onclick="kembaliKeHome()" class="text-sm text-blue-600 font-bold mb-3 hover:underline">&larr; Kembali ke Beranda</button><h2 class="text-3xl font-extrabold">Peta Stasiun Monitoring</h2></div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[550px]">
+    <div id="daftar-stasiun" class="lg:col-span-1 flex flex-col gap-4 overflow-y-auto pr-2"></div>
+    <div class="lg:col-span-2 bg-gray-200 rounded-2xl overflow-hidden shadow-lg border-2 border-gray-200 relative z-0" id="map"></div>
+  </div>
+</div>
+
+<div id="halaman-detail-alat" class="hidden pt-28 pb-10 px-6 max-w-7xl mx-auto">
+  <div class="mb-6 flex justify-between items-end border-b-2 border-gray-200 pb-4">
+    <div>
+      <button onclick="kembaliKePeta()" class="text-sm text-blue-600 font-bold mb-2 hover:underline">&larr; Kembali ke Peta</button>
+      <h2 id="judul-alat" class="text-4xl font-extrabold">Nama Stasiun</h2>
+      <p class="font-semibold mt-1 flex items-center gap-2 text-sm"><span id="dot-alat" class="w-2.5 h-2.5 rounded-full bg-gray-400 inline-block"></span><span id="teks-alat" class="text-gray-500">Memeriksa alat...</span></p>
+    </div>
+    <div class="text-right hidden md:block"><span id="badge-status-sistem" class="text-xs bg-white text-gray-600 px-4 py-1.5 rounded-full font-bold border-2 shadow-sm">Memuat...</span></div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 flex flex-col gap-6">
+      <div id="panel-offline" class="hidden bg-white p-10 rounded-2xl shadow-sm border border-red-200 border-t-4 border-t-red-500 text-center">
+        <div class="text-5xl mb-3">&#128308;</div>
+        <h3 class="text-2xl font-extrabold text-red-600 mb-2">Alat Offline</h3>
+        <p class="text-gray-500 text-sm">Grafik tidak ditampilkan karena alat tidak mengirim data.</p>
+        <p id="info-offline" class="text-sm font-semibold text-gray-700 mt-3"></p>
+      </div>
+      <div id="grafik-wrap" class="grid grid-cols-1 gap-6"></div>
+    </div>
+    <div class="lg:col-span-1 flex flex-col gap-6 relative">
+      <div class="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col gap-6">
+        <h3 class="font-bold text-xl border-b-2 pb-2">Kontrol Pompa</h3>
+        <div id="overlay-login" class="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl border border-gray-200">
+          <div class="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center text-center border-t-4 border-blue-600 max-w-[80%]">
+            <h4 id="lock-t" class="font-bold text-lg mb-1">Akses Terkunci</h4>
+            <p id="lock-p" class="text-xs text-gray-500 mb-5">Silakan login untuk mengubah konfigurasi pompa.</p>
+            <button id="lock-b" onclick="bukaModalAuth()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 rounded-lg shadow-md">Login Sekarang</button>
+          </div>
+        </div>
+        <div id="pompa-wrap" class="flex flex-col gap-6"></div>
+      </div>
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 border-t-4 border-indigo-500">
+        <h3 class="font-bold text-lg mb-1">Unduh Data Monitoring</h3><p class="text-xs text-gray-500 mb-4">Tarik riwayat data mentah.</p>
+        <div class="space-y-3">
+          <div class="flex items-center gap-2"><span class="text-xs font-bold w-16 text-gray-600">Dari:</span><input type="date" id="unduh-mulai" class="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-indigo-500"></div>
+          <div class="flex items-center gap-2"><span class="text-xs font-bold w-16 text-gray-600">Sampai:</span><input type="date" id="unduh-akhir" class="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-indigo-500"></div>
+          <button onclick="unduhData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md text-sm mt-2">Unduh File CSV</button>
+        </div>
+      </div>
+      <div id="kartu-kalibrasi" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-200 border-t-4 border-yellow-500">
+        <h3 class="font-bold text-lg mb-4">Kalibrasi Alat</h3>
+        <div class="space-y-3">
+          <select id="kalibrasi-param" onchange="petunjukKal()" class="w-full border-2 border-gray-200 rounded-lg p-2 text-sm font-bold text-gray-700 outline-none">
+            <optgroup label="pH Meter"><option value="pH:4.01">pH - larutan 4.01</option><option value="pH:7.00">pH - larutan 7.00</option><option value="pH:10.01">pH - larutan 10.01</option></optgroup>
+            <optgroup label="EC / TDS / Salinitas"><option value="EC:1413">EC - larutan 1413 &micro;S/cm</option><option value="EC:12880">EC - larutan 12880 &micro;S/cm</option></optgroup>
+            <optgroup label="DO (SEN0681)"><option value="DO:100">DO - titik jenuh 100% (udara)</option><option value="DO:0">DO - titik nol (0 mg/L)</option></optgroup>
+          </select>
+          <div id="petunjuk-kal" class="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3 leading-relaxed"></div>
+          <button onclick="kirimKalibrasi()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2.5 rounded-lg shadow text-sm">Tulis Kalibrasi ke Alat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="halaman-kelola" class="hidden pt-28 pb-10 px-6 max-w-7xl mx-auto">
+  <div class="mb-6"><button onclick="kembaliKeHome()" class="text-sm text-blue-600 font-bold mb-3 hover:underline">&larr; Kembali ke Beranda</button><h2 class="text-3xl font-extrabold">Kelola Pengguna &amp; Akses</h2></div>
+  <div class="flex gap-2 mb-4"><button onclick="tabKelola('users')" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm">Pengguna &amp; Akses</button><button onclick="tabKelola('audit')" class="px-4 py-2 bg-gray-700 text-white rounded-lg font-bold text-sm">Audit Log</button></div>
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 overflow-x-auto"><div id="kelola-users"></div><div id="kelola-audit" class="hidden"></div></div>
+</div>
+
+<script>
+const API_BASE = '';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+let S = null; try { S = JSON.parse(sessionStorage.getItem('oc_sesi') || 'null'); } catch (e) {}
+let daftar = [], stat = {}, sid = 1, markers = {}, ch = {}, serverDown = false, authMode = 'login', lastOnline = {};
+const HAL = ['halaman-utama', 'halaman-peta', 'halaman-detail-alat', 'halaman-kelola'];
+const wib = t => new Date(t).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+function umur(d) { if (d == null) return '-'; if (d < 60) return d + ' detik'; if (d < 3600) return Math.floor(d / 60) + ' menit'; if (d < 86400) return Math.floor(d / 3600) + ' jam'; return Math.floor(d / 86400) + ' hari'; }
+
+/* ---------- API ---------- */
+function api(path, opts) {
+  opts = opts || {}; opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+  if (S) opts.headers.Authorization = 'Bearer ' + S.token;
+  return fetch(API_BASE + path, opts).then(r => { if (r.status === 401 && S) { keluar(); alert('Sesi berakhir, silakan login lagi.'); } return r; });
+}
+async function kirim(path, body, ok) {
+  try {
+    const r = await api(path, { method: 'POST', body: JSON.stringify(body) }); const d = await r.json().catch(() => ({}));
+    alert(r.ok ? (ok || d.pesan || 'Berhasil') : (d.pesan || 'Gagal (' + r.status + ')')); return r.ok;
+  } catch (e) { alert('Kesalahan jaringan ke VPS.'); return false; }
+}
+const bisaKontrol = id => !!S && (S.role === 'super_admin' || (S.stations || {})[id] === 'admin');
+const isSuper = () => !!S && S.role === 'super_admin';
+
+/* ---------- navigasi ---------- */
+function tampil(id) { HAL.forEach(h => $(h).classList.add('hidden')); $(id).classList.remove('hidden'); window.scrollTo(0, 0); }
+function kembaliKeHome() { tampil('halaman-utama'); }
+function bukaHalamanPeta() { tampil('halaman-peta'); setTimeout(() => map.invalidateSize(), 100); muatStasiun(); }
+function kembaliKePeta() { bukaHalamanPeta(); }
+function bukaDetailAlat(id) {
+  sid = id; const s = daftar.find(x => x.id === id);
+  $('judul-alat').innerText = s ? s.nama : 'Stasiun ' + id;
+  tampil('halaman-detail-alat'); terapkanAkses(); muatJadwal(); perbaruiStatus(); muatData();
+  $('unduh-akhir').value = new Date().toISOString().slice(0, 10);
+  $('unduh-mulai').value = new Date(Date.now() - 6048e5).toISOString().slice(0, 10);
+}
+function bukaKelola(ev) { if (ev && ev.preventDefault) ev.preventDefault(); if (!isSuper()) return; tampil('halaman-kelola'); tabKelola('users'); }
+
+/* ---------- auth ---------- */
+function bukaModalAuth() { if (S) { if (confirm('Apakah Anda ingin logout?')) keluar(); return; } $('auth-modal').classList.remove('hidden'); }
+function tutupAuth() { $('auth-modal').classList.add('hidden'); }
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login'; const l = authMode === 'login';
+  $('auth-title').innerText = l ? 'Login Sistem' : 'Daftar Akun Baru';
+  $('auth-subtitle').innerText = l ? 'Masuk untuk mengakses panel kontrol pompa.' : 'Daftarkan email dan username Anda.';
+  $('auth-btn').innerText = l ? 'Masuk Sekarang' : 'Daftar Sekarang';
+  $('auth-switch-text').innerText = l ? 'Belum punya akun?' : 'Sudah punya akun?';
+  $('auth-switch-btn').innerText = l ? 'Daftar disini' : 'Login disini';
+  $('auth-email-container').classList.toggle('hidden', l);
+}
+async function prosesAuth() {
+  const email = $('auth-email').value, username = $('auth-username').value, password = $('auth-password').value;
+  if (!username || !password || (authMode === 'register' && !email)) return alert('Lengkapi isian terlebih dahulu.');
+  const p = { username: username, password: password }; if (authMode === 'register') p.email = email;
+  try {
+    const r = await api(authMode === 'login' ? '/api/login' : '/api/register', { method: 'POST', body: JSON.stringify(p) }); const d = await r.json();
+    if (!d.ok) return alert('Gagal: ' + (d.pesan || 'terjadi kesalahan'));
+    if (authMode === 'register') { alert(d.pesan); return toggleAuthMode(); }
+    S = { token: d.token, username: d.username, role: d.role, stations: d.stations || {} };
+    sessionStorage.setItem('oc_sesi', JSON.stringify(S)); $('auth-password').value = ''; tutupAuth(); terapkanPeran(); muatStasiun();
+  } catch (e) { alert('Kesalahan jaringan. Pastikan VPS menyala.'); }
+}
+function keluar() { S = null; sessionStorage.removeItem('oc_sesi'); terapkanPeran(); if (!$('halaman-kelola').classList.contains('hidden')) kembaliKeHome(); }
+function terapkanPeran() {
+  $('btn-login-nav').innerText = S ? 'Logout (' + S.username + ')' : 'Login';
+  $('nav-kelola').classList.toggle('hidden', !isSuper()); terapkanAkses();
+}
+function terapkanAkses() {
+  const ok = bisaKontrol(sid), ov = $('overlay-login');
+  ov.classList.toggle('hidden', ok); ov.classList.toggle('flex', !ok);
+  $('lock-t').innerText = S ? 'Bukan admin stasiun ini' : 'Akses Terkunci';
+  $('lock-p').innerText = S ? 'Hubungi super admin untuk hak kontrol stasiun ini.' : 'Silakan login untuk mengubah konfigurasi pompa.';
+  $('lock-b').classList.toggle('hidden', !!S); $('kartu-kalibrasi').classList.toggle('hidden', !ok);
+}
+
+/* ---------- peta & daftar stasiun ---------- */
+const map = L.map('map').setView([-6.942, 107.592], 11);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(map);
+async function ambilStasiun() { try { const r = await api('/api/stations'); if (r.ok) daftar = await r.json(); } catch (e) {} }
+async function muatStasiun() {
+  await ambilStasiun();
+  $('daftar-stasiun').innerHTML = daftar.map(s =>
+    '<div class="bg-white p-5 rounded-2xl shadow-md border-2 border-transparent hover:border-blue-400 transition cursor-pointer" onclick="bukaDetailAlat(' + s.id + ')">' +
+    '<div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 text-lg">' + esc(s.nama) + '</h4><span id="status-stasiun' + s.id + '" class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full font-semibold border">Memeriksa...</span></div>' +
+    '<p class="text-sm text-gray-500 mb-1">Perangkat: ' + esc(s.device) + (s.role === 'admin' ? ' &middot; <b class="text-blue-600">Anda admin</b>' : '') + '</p>' +
+    '<p id="umur-stasiun' + s.id + '" class="text-xs text-gray-400 mb-4"></p>' +
+    '<button class="w-full bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white text-sm font-bold py-2 rounded-lg transition">Buka Dashboard &rarr;</button></div>').join('');
+  perbaruiStatus();
+}
+function tandai(s, la, ln, online) {
+  const t = '<b>' + esc(s.nama) + '</b><br>Status: ' + (online ? 'ONLINE' : 'OFFLINE');
+  if (markers[s.id]) { markers[s.id].setLatLng([la, ln]); markers[s.id].getPopup().setContent(t); return; }
+  markers[s.id] = L.marker([la, ln]).addTo(map).bindPopup(t);
+  map.fitBounds(L.latLngBounds(Object.keys(markers).map(k => markers[k].getLatLng())).pad(0.5), { maxZoom: 14 });
+}
+
+/* ---------- STATUS REALTIME (alat offline = tampil offline) ---------- */
+async function tick() {
+  try {
+    const r = await fetch(API_BASE + '/api/device-status', { cache: 'no-store' });
+    const a = await r.json(); serverDown = false; a.forEach(x => stat[x.id] = x);
+  } catch (e) { serverDown = true; Object.keys(stat).forEach(k => { stat[k].online = false; }); }
+  perbaruiStatus();
+}
+function perbaruiStatus() {
+  const ids = daftar.length ? daftar.map(s => s.id) : Object.keys(stat).map(Number);
+  let on = 0;
+  ids.forEach(id => {
+    const x = stat[id] || { online: false }, s = daftar.find(d => d.id === id) || { id: id, nama: 'Stasiun ' + id };
+    if (x.online) on++;
+    const b = $('status-stasiun' + id);
+    if (b) { b.className = 'text-xs px-2 py-1 rounded-full font-bold border ' + (x.online ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'); b.innerText = x.online ? 'Online' : 'Offline'; }
+    const u = $('umur-stasiun' + id);
+    if (u) u.innerText = x.last_seen ? (x.online ? 'Data terakhir ' + umur(x.age) + ' lalu' : 'Terakhir terlihat ' + wib(x.last_seen)) : 'Belum ada data masuk';
+    const la = x.lat || s.lat, ln = x.lng || s.lng; if (la && ln) tandai(s, la, ln, x.online);
+    if (x.online && !lastOnline[id] && id === sid && !$('halaman-detail-alat').classList.contains('hidden')) muatData();
+    lastOnline[id] = x.online;
+  });
+  const bn = $('badge-nav'), tn = ids.length ? on + '/' + ids.length + ' Alat Online' : 'Memeriksa alat...';
+  const warna = serverDown ? 'red' : (!ids.length ? 'yellow' : (on === ids.length ? 'green' : (on === 0 ? 'red' : 'yellow')));
+  bn.className = 'hidden md:flex items-center gap-2 bg-' + warna + '-500/20 border border-' + warna + '-400 text-' + warna + '-200 text-xs px-3 py-1 rounded-full';
+  $('dot-nav').className = 'w-2 h-2 rounded-full bg-' + warna + '-400' + (warna === 'yellow' ? ' animate-pulse' : '');
+  $('teks-nav').innerText = serverDown ? 'Server Terputus' : tn;
+  if (!$('halaman-detail-alat').classList.contains('hidden')) tampilStatusDetail();
+}
+function tampilStatusDetail() {
+  const x = stat[sid] || { online: false }, on = !!x.online, bs = $('badge-status-sistem');
+  $('dot-alat').className = 'w-2.5 h-2.5 rounded-full inline-block ' + (on ? 'bg-green-500 animate-pulse' : 'bg-red-500');
+  $('teks-alat').className = on ? 'text-green-600' : 'text-red-600';
+  $('teks-alat').innerText = serverDown ? 'Server terputus' : (on ? 'Alat Online' : 'Alat Offline');
+  bs.className = 'text-xs px-4 py-1.5 rounded-full font-bold border-2 shadow-sm ' + (on ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200');
+  bs.innerText = on ? 'Data terakhir ' + umur(x.age) + ' lalu' : 'Tidak ada data masuk';
+  $('panel-offline').classList.toggle('hidden', on); $('grafik-wrap').classList.toggle('hidden', !on);
+  $('info-offline').innerText = x.last_seen ? 'Terakhir terlihat: ' + wib(x.last_seen) + ' WIB (' + umur(x.age) + ' lalu)' : 'Belum ada data masuk dari alat ini.';
+  if (on) Object.keys(ch).forEach(k => ch[k].resize());
+}
+
+/* ---------- grafik ---------- */
+const P = [['tds', 'TDS - Total Dissolved Solids', 'ppm', 'blue', '#2563eb'], ['ph', 'pH - Tingkat Keasaman', '', 'emerald', '#059669', 6.5, 8.5], ['do', 'DO - Dissolved Oxygen', 'mg/L', 'purple', '#9333ea', 5, null],
+  ['suhu', 'Suhu Perairan', '&deg;C', 'amber', '#d97706', null, 31], ['salinitas', 'Salinitas', 'PSU', 'cyan', '#0891b2'], ['orp', 'ORP - Potensial Reduksi Oksidasi', 'mV', 'rose', '#e11d48']];
+$('grafik-wrap').innerHTML = P.map(p => '<div class="bg-white p-6 rounded-2xl shadow-sm border border-' + p[3] + '-100 border-t-4 border-t-' + p[3] + '-600"><h4 class="font-bold text-' + p[3] + '-700 text-xs uppercase tracking-wider mb-1">' + p[1] + '</h4><div class="text-3xl font-extrabold text-' + p[3] + '-900 mb-4" id="v-' + p[0] + '">--</div><div class="relative h-[160px] w-full"><canvas id="c-' + p[0] + '"></canvas></div></div>').join('');
+const garis = v => ({ type: 'line', yMin: v, yMax: v, borderColor: 'rgba(255,0,0,.5)', borderWidth: 1.5, borderDash: [5, 5] });
+P.forEach(p => {
+  const a = {}; if (p[5] != null) a.lo = garis(p[5]); if (p[6] != null) a.hi = garis(p[6]);
+  ch[p[0]] = new Chart($('c-' + p[0]), { type: 'line', data: { labels: [], datasets: [{ data: [], borderColor: p[4], backgroundColor: p[4] + '20', fill: true, tension: .4, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false }, annotation: { annotations: a } },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 10 } } }, y: { grace: '5%', ticks: { maxTicksLimit: 5, font: { size: 10 } } } } } });
+});
+async function muatData() {
+  if (!(stat[sid] && stat[sid].online)) return;
+  try {
+    const d = await (await api('/api/sensors/' + sid)).json(), n = d.labels.length, k = n > 60 ? Math.ceil(n / 60) : 1, th = a => (a || []).filter((_, i) => i % k === 0);
+    P.forEach(p => {
+      const a = d[p[0]] || [], c = ch[p[0]]; c.data.labels = th(d.labels); c.data.datasets[0].data = th(a); c.update();
+      const l = a[a.length - 1], bad = l != null && ((p[5] != null && l < p[5]) || (p[6] != null && l > p[6]));
+      $('v-' + p[0]).innerHTML = (l == null ? '--' : l) + ' <span class="text-lg font-bold opacity-70">' + p[2] + '</span>' + (bad ? ' <span class="text-sm text-red-500 font-bold ml-2 uppercase">Luar Batas</span>' : '');
+    });
+  } catch (e) {}
+}
+
+/* ---------- pompa, jadwal, kalibrasi ---------- */
+const num = (id, ph, cls) => '<input type="number" min="0" id="' + id + '" placeholder="' + ph + '" class="w-full border-2 border-gray-200 rounded-lg ' + (cls || 'p-2 text-sm') + ' text-center font-bold outline-none">';
+$('pompa-wrap').innerHTML = [['laut', 'Pompa Laut', 'Sampling Data', 'blue'], ['tawar', 'Pompa Tawar', 'Air Bilas', 'cyan']].map(a => {
+  const j = a[0], c = a[3];
+  return '<div class="border-l-4 border-l-' + c + '-500 pl-4"><div class="mb-4"><h4 class="font-bold text-' + c + '-900">' + a[1] + '</h4><p class="text-[10px] text-gray-500 uppercase font-bold">' + a[2] + '</p></div><div class="space-y-4">' +
+    '<div><label class="text-[11px] font-bold text-gray-500 mb-1 block">Mulai Pukul (WIB) :</label><input type="time" id="jam-mulai-' + j + '" class="w-full border-2 border-gray-200 rounded-lg p-2 text-center text-sm font-bold outline-none"></div>' +
+    '<div><label class="text-[11px] font-bold text-gray-500 mb-1 block">Durasi (Menit : Detik) :</label><div class="flex gap-2">' + num('durasi-' + j + '-menit', 'M') + num('durasi-' + j + '-detik', 'D') + '</div></div>' +
+    '<div><label class="text-[11px] font-bold text-gray-500 mb-1 block">Diulang Tiap (H:J:M:D) :</label><div class="flex gap-1">' + ['hari', 'jam', 'menit', 'detik'].map(u => num('interval-' + j + '-' + u, u[0].toUpperCase(), 'p-1 text-xs')).join('') + '</div></div>' +
+    '<button onclick="simpanJadwal(\'' + j + '\')" class="w-full bg-' + c + '-600 hover:bg-' + c + '-700 text-white text-xs font-bold py-2.5 rounded-lg shadow">Simpan Jadwal ' + (j === 'laut' ? 'Laut' : 'Tawar') + '</button>' +
+    '<div class="grid grid-cols-2 gap-2"><button onclick="manualOverride(\'' + j + '\',\'ON\')" class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold py-2 rounded-lg hover:bg-emerald-100">Aktifkan (ON)</button><button onclick="manualOverride(\'' + j + '\',\'OFF\')" class="bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold py-2 rounded-lg hover:bg-rose-100">Matikan (OFF)</button></div></div></div>';
+}).join('<hr class="border-gray-100 border-2">');
+const manualOverride = (p, a) => kirim('/api/control/' + sid, { pompa: p, command: a }, 'Pompa ' + p.toUpperCase() + ' -> ' + a);
+function simpanJadwal(j) {
+  const v = id => parseInt($(id).value) || 0, du = v('durasi-' + j + '-menit') * 60 + v('durasi-' + j + '-detik');
+  const iv = v('interval-' + j + '-hari') * 86400 + v('interval-' + j + '-jam') * 3600 + v('interval-' + j + '-menit') * 60 + v('interval-' + j + '-detik'), jam = $('jam-mulai-' + j).value;
+  if (!jam) return alert('Isi jam mulai.'); if (du <= 0) return alert('Durasi harus > 0 detik.'); if (iv <= du) return alert('Interval harus lebih besar dari durasi.');
+  kirim('/api/schedule/' + sid, { pompa: j, jam_mulai: jam, durasi_detik: du, interval_detik: iv }, 'Jadwal Pompa ' + j.toUpperCase() + ' berhasil disimpan!');
+}
+async function muatJadwal() {
+  try {
+    const d = await (await api('/api/schedule/' + sid)).json();
+    ['laut', 'tawar'].forEach(j => { const s = d[j]; if (!s) return; const i = s.interval_detik, set = (k, x) => { $(k).value = x; };
+      set('jam-mulai-' + j, s.jam_mulai); set('durasi-' + j + '-menit', Math.floor(s.durasi_detik / 60)); set('durasi-' + j + '-detik', s.durasi_detik % 60);
+      set('interval-' + j + '-hari', Math.floor(i / 86400)); set('interval-' + j + '-jam', Math.floor(i % 86400 / 3600)); set('interval-' + j + '-menit', Math.floor(i % 3600 / 60)); set('interval-' + j + '-detik', i % 60); });
+  } catch (e) {}
+}
+const PETUNJUK = {
+  DO: '<b>Kalibrasi DO (SEN0681)</b> - ikuti urutan manual:<br>1) Pilih <b>titik jenuh 100%</b>: letakkan sensor di air jenuh udara (diaerasi 1 jam lalu diamkan 30 menit) atau udara jenuh uap air, ~1 cm di atas permukaan air. Tunggu nilai DO stabil, lalu kirim.<br>2) Pilih <b>titik nol</b>: rendam sensor di larutan natrium sulfit 5% (5 g per 95 g air, diamkan 1 jam), aduk pelan. Tunggu stabil, lalu kirim.<br>Jangan menggores membran fluoresens. Kalibrasi tiap 3 bulan.',
+  pH: '<b>Kalibrasi pH:</b> celupkan probe ke larutan buffer sesuai titik yang dipilih, tunggu nilai stabil, lalu kirim. Disarankan urut 7.00, lalu 4.01 / 10.01.',
+  EC: '<b>Kalibrasi EC:</b> celupkan probe ke larutan standar sesuai titik yang dipilih, tunggu nilai stabil, lalu kirim.' };
+function petunjukKal() { $('petunjuk-kal').innerHTML = PETUNJUK[$('kalibrasi-param').value.split(':')[0]]; }
+function kirimKalibrasi() {
+  const p = $('kalibrasi-param').value.split(':');
+  if (!confirm('Kirim kalibrasi ' + p[0] + ' titik ' + p[1] + ' ke ' + $('judul-alat').innerText + '?\nPastikan sensor berada di larutan/kondisi standar dan nilainya sudah stabil.')) return;
+  kirim('/api/calibrate/' + sid, { sensor: p[0], titik: parseFloat(p[1]) });
+}
+function unduhData() {
+  const m = $('unduh-mulai').value, a = $('unduh-akhir').value;
+  if (m && a && m > a) return alert('Tanggal "Dari" tidak boleh lebih besar dari "Sampai".');
+  location.href = API_BASE + '/api/export/' + sid + '?start=' + encodeURIComponent(m) + '&end=' + encodeURIComponent(a);
+}
+
+/* ---------- Kelola (super admin) ---------- */
+function tabKelola(t) { $('kelola-users').classList.toggle('hidden', t !== 'users'); $('kelola-audit').classList.toggle('hidden', t !== 'audit'); t === 'users' ? muatUsers() : muatAudit(); }
+async function aturUser(id, aktif, role) { await kirim('/api/admin/user', { user_id: id, is_active: !!Number(aktif), role: role }, 'Tersimpan'); muatUsers(); }
+const aturAnggota = (u, s, r) => kirim('/api/admin/member', { user_id: u, station_id: s, role: r }, 'Tersimpan');
+async function muatUsers() {
+  const box = $('kelola-users'); box.innerHTML = '<p class="text-sm text-gray-500 p-2">Memuat...</p>'; await ambilStasiun();
+  const r = await api('/api/admin/users'); if (!r.ok) { box.innerHTML = '<p class="text-sm text-red-600 p-2">Gagal memuat (' + r.status + ')</p>'; return; }
+  const rows = await r.json(), U = {}; rows.forEach(x => { const u = U[x.id] = U[x.id] || Object.assign({ m: {} }, x); if (x.station_id) u.m[x.station_id] = x.srole; });
+  const pilih = (o, cur, fn) => '<select class="border-2 border-gray-200 rounded-lg p-1 text-sm font-semibold" onchange="' + fn + '">' + o.map(x => '<option' + (x === cur ? ' selected' : '') + '>' + x + '</option>').join('') + '</select>';
+  box.innerHTML = '<table class="w-full text-sm"><thead class="text-left text-gray-500 text-xs uppercase"><tr><th class="p-2">User</th><th>Email</th><th>Role</th>' + daftar.map(s => '<th>' + esc(s.nama) + '</th>').join('') + '<th>Status</th></tr></thead><tbody>' +
+    Object.keys(U).map(k => { const u = U[k]; return '<tr class="border-t"><td class="p-2 font-bold">' + esc(u.username) + '</td><td>' + esc(u.email) + '</td><td>' + pilih(['member', 'super_admin'], u.role, 'aturUser(' + u.id + ',' + u.is_active + ',this.value)') + '</td>' +
+      daftar.map(s => '<td>' + pilih(['none', 'viewer', 'admin'], u.m[s.id] || 'none', 'aturAnggota(' + u.id + ',' + s.id + ',this.value)') + '</td>').join('') +
+      '<td><button class="px-3 py-1 rounded-lg text-white text-xs font-bold ' + (u.is_active ? 'bg-rose-600' : 'bg-emerald-600') + '" onclick="aturUser(' + u.id + ',' + (u.is_active ? 0 : 1) + ',\'' + u.role + '\')">' + (u.is_active ? 'Nonaktifkan' : 'Aktifkan') + '</button></td></tr>'; }).join('') + '</tbody></table>';
+}
+async function muatAudit() {
+  const box = $('kelola-audit'); box.innerHTML = '<p class="text-sm text-gray-500 p-2">Memuat...</p>';
+  const r = await api('/api/admin/audit'); if (!r.ok) { box.innerHTML = '<p class="text-sm text-red-600 p-2">Gagal memuat (' + r.status + ')</p>'; return; }
+  const a = await r.json();
+  box.innerHTML = '<table class="w-full text-sm"><thead class="text-left text-gray-500 text-xs uppercase"><tr><th class="p-2">Waktu (WIB)</th><th>User</th><th>Aksi</th><th>Detail</th><th>Stasiun</th></tr></thead><tbody>' +
+    a.map(x => '<tr class="border-t"><td class="p-2">' + esc(wib(x.waktu)) + '</td><td>' + esc(x.username) + '</td><td>' + esc(x.aksi) + '</td><td>' + esc(x.detail) + '</td><td>' + esc(x.stasiun_id) + '</td></tr>').join('') + '</tbody></table>';
+}
+
+/* ---------- mulai ---------- */
+petunjukKal(); terapkanPeran();
+ambilStasiun().then(tick);
+setInterval(tick, 3000);          // status alat: tiap 3 detik
+setInterval(muatData, 5000);      // grafik: tiap 5 detik (hanya jika alat online)
+</script>
+</body>
+</html>
