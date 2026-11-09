@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use O-CLIMBOX, please cite the article and this archive."
+title: "O-CLIMBOX: design files, software and data of an open-source IoT multiparameter water quality station for coastal waters"
+version: 1.0.0
+doi: 10.5281/zenodo.23804672
+date-released: 2026-10-30
+license: CC-BY-4.0
+repository-code: "https://github.com/ramonestelaumbanua-cmyk/O-CLIMBOX"
+keywords: [water quality monitoring, coastal waters, Internet of Things, Node-RED, MQTT, open hardware, automated sampling, freshwater rinsing]
+authors:
+  - {family-names: Purba, given-names: Noir P., affiliation: "Universitas Padjadjaran", email: noir.purba@unpad.ac.id}
+  - {family-names: Banua, given-names: Ramones T., affiliation: "Universitas Padjadjaran"}
+  - {family-names: Ismaulanie, given-names: Sadila, affiliation: "Universitas Padjadjaran"}
+  - {family-names: Kelana, given-names: Perdana P., affiliation: "Politeknik Kelautan dan Perikanan Pangandaran"}
+  - {family-names: Azhar, given-names: Aqyla R., affiliation: "Universitas Padjadjaran"}
+  - {family-names: Dewanti, given-names: Lantun P., affiliation: "Universitas Padjadjaran"}
+  - {family-names: Pratama, given-names: Gilar B., affiliation: "Universitas Padjadjaran"}
